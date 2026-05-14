@@ -1,102 +1,142 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Il mio portfolio</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0F4C81; /* Pantone Buffetti 19-4052 RGB 15 - 76 - 129 */
-      color: #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    header {
-      text-align: center;
-      padding: 60px 20px;
-    }
-
-    h1 {
-      font-size: 40px;
-      margin-bottom: 10px;
-    }
-
-    p {
-      color: #94a3b8;
-    }
-
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      width: 90%;
-      max-width: 900px;
-      margin-top: 30px;
-    }
-
-    .card {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      transition: 0.2s;
-    }
-
-    .card:hover {
-      transform: scale(1.05);
-    }
-
-    a {
-      color: #38bdf8;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    footer {
-      margin-top: 50px;
-      color: #64748b;
-      font-size: 14px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Gestione Articoli e Categorie</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+<style>
+body { font-family: sans-serif; margin: 20px; max-width: 800px; }
+input, select, button, textarea { margin: 5px 0; width: 100%; padding: 5px; box-sizing: border-box; }
+table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }
+h2 { margin-top: 30px; }
+</style>
 </head>
-
 <body>
 
-  <header>
-    <h1>Ciao, sono Sergio Cernigliaro 👋</h1>
-    <p>Benvenuto nel mio portfolio personale</p>
-  </header>
+<h1>Gestione Articoli e Categorie</h1>
 
-  <div class="container">
+<h2>Categorie</h2>
+<input type="text" id="newCategory" placeholder="Nome categoria">
+<button onclick="addCategory()">Aggiungi Categoria</button>
+<ul id="categoryList"></ul>
 
-    <div class="card">
-      <h3>I Colori del Sole</h3>
-      <p>Coro Folk Siciliano</p>
-      <a href="https://sergiocer.github.io/ColoriDelSole/">Vai</a>
-    </div>
+<h2>Articoli</h2>
+<input type="text" id="articleDesc" placeholder="Descrizione articolo">
+<select id="categorySelect">
+  <option value="">-- Seleziona categoria --</option>
+</select>
+<button onclick="addArticle()">Aggiungi Articolo</button>
 
-    <div class="card">
-      <h3>Converte Colori</h3>
-      <p>Da scala cromatica ad Hex RGB etc.</p>
-      <a href="https://devcrate.net/color/?utm_source=chatgpt.com">Vai</a>
-    </div>
+<h2>Lista Articoli</h2>
+<table id="articleTable">
+  <thead>
+    <tr><th>ID Articolo</th><th>Descrizione</th><th>Categoria</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-    <div class="card">
-      <h3>Etito</h3>
-      <p>Lista della spesa</p>
-      <a href="https://sergiocer.github.io/Etito/">Apri</a>
-    </div>
+<script>
+/* ===== Configurazione Supabase ===== */
+const supabaseUrl = 'https://lvtywxtunfmnkmwowxnh.supabase.co';
+const supabaseKey = 'sb_publishable_c6XXrXNhArlfFdZ8SlZvew_ZUwFo4Ko'; 
+const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
 
-  </div>
+/* ===== Funzioni ===== */
 
-  <footer>
-    © 2026 - Il mio portfolio
-  </footer>
+// Carica le categorie all'avvio
+async function loadCategories() {
+    const { data, error } = await supabase
+        .from('categorie')
+        .select('*')
+        .order('id_categoria', { ascending: true });
+
+    if (error) return alert("Errore caricamento categorie: " + error.message);
+
+    const ul = document.getElementById('categoryList');
+    const select = document.getElementById('categorySelect');
+
+    data.forEach(cat => {
+        const li = document.createElement('li');
+        li.textContent = cat.cat_descrizione;
+        ul.appendChild(li);
+
+        const option = document.createElement('option');
+        option.value = cat.id_categoria;
+        option.textContent = cat.cat_descrizione;
+        select.appendChild(option);
+    });
+}
+
+// Aggiungi categoria
+async function addCategory() {
+    const name = document.getElementById('newCategory').value.trim();
+    if (!name) return alert("Inserisci nome categoria");
+
+    const { data, error } = await supabase
+        .from('categorie')
+        .insert([{ cat_descrizione: name }])
+        .select();
+
+    if (error) return alert("Errore aggiunta categoria: " + error.message);
+
+    // Aggiorna UI
+    const li = document.createElement('li');
+    li.textContent = data[0].cat_descrizione;
+    document.getElementById('categoryList').appendChild(li);
+
+    const option = document.createElement('option');
+    option.value = data[0].id_categoria;
+    option.textContent = data[0].cat_descrizione;
+    document.getElementById('categorySelect').appendChild(option);
+
+    document.getElementById('newCategory').value = '';
+}
+
+// Carica articoli all'avvio
+async function loadArticles() {
+    const { data, error } = await supabase
+        .from('articoli')
+        .select(`id_articolo, art_descrizione, id_categorie, categorie(cat_descrizione)`)
+        .order('id_articolo', { ascending: true });
+
+    if (error) return alert("Errore caricamento articoli: " + error.message);
+
+    const tbody = document.getElementById('articleTable').querySelector('tbody');
+    tbody.innerHTML = '';
+
+    data.forEach(a => {
+        const tr = document.createElement('tr');
+        const categoryName = a.categorie ? a.categorie.cat_descrizione : '';
+        tr.innerHTML = `<td>${a.id_articolo}</td><td>${a.art_descrizione || ''}</td><td>${categoryName}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// Aggiungi articolo
+async function addArticle() {
+    const desc = document.getElementById('articleDesc').value.trim();
+    const catId = document.getElementById('categorySelect').value;
+
+    if (!desc || !catId) return alert("Inserisci descrizione e seleziona categoria");
+
+    const { data, error } = await supabase
+        .from('articoli')
+        .insert([{ art_descrizione: desc, id_categorie: parseInt(catId) }])
+        .select();
+
+    if (error) return alert("Errore aggiunta articolo: " + error.message);
+
+    loadArticles(); // ricarica tabella
+
+    document.getElementById('articleDesc').value = '';
+    document.getElementById('categorySelect').value = '';
+}
+
+/* ===== Inizializzazione ===== */
+loadCategories();
+loadArticles();
+</script>
 
 </body>
 </html>
