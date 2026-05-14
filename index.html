@@ -39,12 +39,12 @@ h2 { margin-top: 30px; }
 <script>
 /* ===== Configurazione Supabase ===== */
 const supabaseUrl = 'https://lvtywxtunfmnkmwowxnh.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dHl3eHR1bmZtbmttd293eG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3Njg4MDcsImV4cCI6MjA5NDM0NDgwN30.qq1qPdUxYFcqnv4cA50JMyTBAA5XWKxruL6HEE4-ACM'; 
+const supabaseKey = 'INSERISCI_LA_TUA_ANON_KEY'; 
 const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
 
 /* ===== Funzioni ===== */
 
-// Carica le categorie all'avvio
+// Carica categorie e aggiorna UL e SELECT
 async function loadCategories() {
     const { data, error } = await supabase
         .from('categorie')
@@ -55,6 +55,9 @@ async function loadCategories() {
 
     const ul = document.getElementById('categoryList');
     const select = document.getElementById('categorySelect');
+
+    ul.innerHTML = '';
+    select.innerHTML = '<option value="">-- Seleziona categoria --</option>';
 
     data.forEach(cat => {
         const li = document.createElement('li');
@@ -80,20 +83,11 @@ async function addCategory() {
 
     if (error) return alert("Errore aggiunta categoria: " + error.message);
 
-    // Aggiorna UI
-    const li = document.createElement('li');
-    li.textContent = data[0].cat_descrizione;
-    document.getElementById('categoryList').appendChild(li);
-
-    const option = document.createElement('option');
-    option.value = data[0].id_categoria;
-    option.textContent = data[0].cat_descrizione;
-    document.getElementById('categorySelect').appendChild(option);
-
     document.getElementById('newCategory').value = '';
+    await loadCategories(); // ricarica categorie
 }
 
-// Carica articoli all'avvio
+// Carica articoli
 async function loadArticles() {
     const { data, error } = await supabase
         .from('articoli')
@@ -104,6 +98,13 @@ async function loadArticles() {
 
     const tbody = document.getElementById('articleTable').querySelector('tbody');
     tbody.innerHTML = '';
+
+    if (data.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="3" style="text-align:center;">Nessun articolo presente</td>`;
+        tbody.appendChild(tr);
+        return;
+    }
 
     data.forEach(a => {
         const tr = document.createElement('tr');
@@ -127,10 +128,9 @@ async function addArticle() {
 
     if (error) return alert("Errore aggiunta articolo: " + error.message);
 
-    loadArticles(); // ricarica tabella
-
     document.getElementById('articleDesc').value = '';
     document.getElementById('categorySelect').value = '';
+    await loadArticles(); // ricarica tabella
 }
 
 /* ===== Inizializzazione ===== */
