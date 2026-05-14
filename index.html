@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Il mio portfolio</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #94a3b8;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      width: 90%;
+      max-width: 900px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    a {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 50px;
+      color: #64748b;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Ciao, sono il mio nome 👋</h1>
+    <p>Benvenuto nel mio portfolio personale</p>
+  </header>
+
+  <div class="container">
+
+    <div class="card">
+      <h3>Progetto 1</h3>
+      <p>Descrizione breve del progetto</p>
+      <a href="https://github.com/tuo-username/progetto1">Vai</a>
+    </div>
+
+    <div class="card">
+      <h3>Progetto 2</h3>
+      <p>Descrizione breve del progetto</p>
+      <a href="https://github.com/tuo-username/progetto2">Vai</a>
+    </div>
+
+    <div class="card">
+      <h3>Demo live</h3>
+      <p>Sito pubblicato con GitHub Pages</p>
+      <a href="https://nome.github.io/repo/">Apri</a>
+    </div>
+
+  </div>
+
+  <footer>
+    © 2026 - Il mio portfolio
+  </footer>
+
+</body>
+</html>
