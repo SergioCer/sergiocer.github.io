@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Categorie UI</title>
+
+<style>
+
+/* =========================================================
+   1. RESET BASE + STRUTTURA GENERALE
+========================================================= */
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+}
+
+/* contenitore principale */
+#app {
+    width: 900px;
+    margin: 20px auto;
+}
+
+/* =========================================================
+   2. AREA INFO (3 righe max, overflow ellipsis)
+========================================================= */
+
+#infoArea {
+    background: #222;
+    color: #fff;
+    padding: 10px;
+    min-height: 60px;
+    border-radius: 8px;
+    font-size: 14px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+/* testo troncato */
+#infoText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+/* =========================================================
+   3. TOP BAR (TUTTI / CATEGORIE)
+========================================================= */
+
+#topBar {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+}
+
+.button {
+    padding: 8px 12px;
+    background: #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+/* =========================================================
+   4. LAYOUT PRINCIPALE
+========================================================= */
+
+#container {
+    display: flex;
+    gap: 10px;
+}
+
+/* colonna primari */
+#primari {
+    width: 300px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+/* colonna secondari */
+#secondari {
+    flex: 1;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+/* =========================================================
+   5. ITEM GENERICI
+========================================================= */
+
+.item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    margin: 4px 0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+/* hover leggero */
+.item:hover {
+    transform: scale(1.02);
+}
+
+/* =========================================================
+   6. CHECKBOX ROUND (● ° )
+========================================================= */
+
+.check {
+    width: 18px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* ON */
+.on {
+    color: white;
+}
+
+/* OFF */
+.off {
+    color: #999;
+}
+
+/* PARZIALE */
+.partial {
+    color: white;
+}
+
+/* =========================================================
+   7. STATO ATTIVO CATEGORIA
+========================================================= */
+
+.active-category {
+    transform: scale(1.03);
+    box-shadow: 0 0 6px rgba(0,0,0,0.2);
+}
+
+/* =========================================================
+   8. COLORI BASE (ESEMPI)
+========================================================= */
+
+.cat-0 { background: #2ecc71; }
+.cat-1 { background: #3498db; }
+.cat-2 { background: #9b59b6; }
+.cat-3 { background: #f1c40f; }
+
+.sub {
+    border-radius: 8px;
+    margin: 4px;
+    padding: 6px;
+}
+
+/* =========================================================
+   9. AREA SECONDARI - HIDDEN INIT
+========================================================= */
+
+.hidden {
+    display: none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <!-- =====================================================
+         AREA INFO (descrizione dinamica)
+    ===================================================== -->
+    <div id="infoArea">
+        <div id="infoText">Seleziona una categoria o un elemento per vedere le informazioni</div>
+    </div>
+
+    <!-- =====================================================
+         TOP BAR (TUTTI / MENU)
+    ===================================================== -->
+    <div id="topBar">
+        <div class="button" id="toggleAll">( ) Tutti/Nessuno</div>
+        <div class="button" id="toggleMenu">Categorie</div>
+    </div>
+
+    <!-- =====================================================
+         CONTENITORE PRINCIPALI + SECONDARI
+    ===================================================== -->
+    <div id="container">
+
+        <div id="primari"></div>
+        <div id="secondari"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =========================================================
+   1. MOCK DATI (poi sostituiti con Supabase)
+========================================================= */
+
+const data = [
+    {
+        id: 0,
+        name: "Natura",
+        color: "#2ecc71",
+        subs: [
+            { id: 0, name: "Foreste", desc: "Boschi e aree verdi" },
+            { id: 1, name: "Laghi", desc: "Specchi d'acqua naturali" },
+            { id: 2, name: "Montagne", desc: "Percorsi alpini e trekking" }
+        ]
+    },
+    {
+        id: 1,
+        name: "Sport",
+        color: "#3498db",
+        subs: [
+            { id: 0, name: "Calcio", desc: "Sport di squadra" },
+            { id: 1, name: "Nuoto", desc: "Sport acquatico" }
+        ]
+    }
+];
+
+/* =========================================================
+   2. STATE MANAGEMENT
+========================================================= */
+
+let state = {
+    activeCategory: null,
+    selected: {}, // categoryId -> [subIds]
+};
+
+/* init */
+data.forEach(c => state.selected[c.id] = []);
+
+/* =========================================================
+   3. RENDER CATEGORIE
+========================================================= */
+
+const primari = document.getElementById("primari");
+const secondari = document.getElementById("secondari");
+const infoText = document.getElementById("infoText");
+
+function renderCategories() {
+
+    primari.innerHTML = "";
+
+    data.forEach(cat => {
+
+        let selectedCount = state.selected[cat.id].length;
+        let total = cat.subs.length;
+
+        let status =
+            selectedCount === 0 ? "off" :
+            selectedCount === total ? "on" :
+            "partial";
+
+        const div = document.createElement("div");
+        div.className = `item cat-${cat.id % 4} ${state.activeCategory === cat.id ? "active-category" : ""}`;
+
+        div.innerHTML = `
+            <div class="check ${status}">
+                ${status === "on" ? "●" : status === "partial" ? "°" : "○"}
+            </div>
+            <div>${cat.name}</div>
+        `;
+
+        /* CLICK = lock categoria */
+        div.onclick = () => {
+            state.activeCategory = cat.id;
+            renderSubcategories(cat.id);
+            renderCategories();
+        };
+
+        primari.appendChild(div);
+    });
+}
+
+/* =========================================================
+   4. RENDER SECONDARI
+========================================================= */
+
+function renderSubcategories(catId) {
+
+    const cat = data.find(c => c.id === catId);
+    secondari.innerHTML = "";
+
+    cat.subs.forEach(sub => {
+
+        const div = document.createElement("div");
+        div.className = `item sub`;
+        div.style.background = cat.color + "33";
+
+        div.innerHTML = `
+            <div class="check off">○</div>
+            <div>${sub.name}</div>
+        `;
+
+        /* CLICK SELECT */
+        div.onclick = () => {
+
+            let arr = state.selected[catId];
+
+            if(arr.includes(sub.id)) {
+                arr = arr.filter(x => x !== sub.id);
+            } else {
+                arr.push(sub.id);
+            }
+
+            state.selected[catId] = arr;
+
+            updateInfo(sub.desc);
+            renderCategories();
+            renderSubcategories(catId);
+        };
+
+        /* HOVER INFO */
+        div.onmouseenter = () => {
+            updateInfo(sub.desc);
+        };
+
+        secondari.appendChild(div);
+    });
+}
+
+/* =========================================================
+   5. AREA INFO
+========================================================= */
+
+function updateInfo(text) {
+    infoText.textContent = text;
+}
+
+/* =========================================================
+   6. TUTTI / NESSUNO
+========================================================= */
+
+document.getElementById("toggleAll").onclick = () => {
+
+    let allOn = Object.values(state.selected)
+        .every(arr => arr.length > 0);
+
+    if(allOn) {
+        // RESET
+        Object.keys(state.selected).forEach(k => state.selected[k] = []);
+        state.activeCategory = null;
+    } else {
+        // SELECT ALL
+        data.forEach(cat => {
+            state.selected[cat.id] = cat.subs.map(s => s.id);
+        });
+    }
+
+    renderCategories();
+    secondari.innerHTML = "";
+};
+
+/* =========================================================
+   7. INIT
+========================================================= */
+
+renderCategories();
+
+</script>
+
+</body>
+</html>
